@@ -65,6 +65,7 @@ function convert_to_primaries(image, primaries)
 end
 
 primary_source = convert_to_primaries(source, primaries)
+primary_dest = convert_to_primaries(dest, primaries)
 
 colorim(primary_source, "RGBA")
 # now we radiate out... and stop at the closest pixel in dest with the same color as the pixel in source
@@ -116,10 +117,19 @@ function sample_spiral(focus_point, halt_fn, top_left, bottom_right)
     # initialize current x, y
     current_point = focus_point
     while current_point != farthest_corner
-        current_point, theta = get_next_point(theta, alpha, omega, focus_point)
         if in_rectangle(current_point, top_left, bottom_right) && halt_fn(current_point)
             return current_point
         end
+        current_point, theta = get_next_point(theta, alpha, omega, focus_point)
     end
     false
 end
+
+function same_color_halt_fn(source_point, source_image, dest_image)
+    # returns a function that returns true if the dest_point in dest_image is the same
+    # color as the source_point in source_image
+    dest_point -> dest_image[:,dest_point[1],dest_point[2]] == source_image[:,source_point[1], source_point[2]]
+end
+
+dest_size = size(primary_dest)
+sample_spiral([30,30], same_color_halt_fn([30,30], primary_source, primary_dest), [0,0], [dest_size[2], dest_size[3]])
